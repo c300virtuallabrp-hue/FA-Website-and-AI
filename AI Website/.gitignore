@@ -1,0 +1,10 @@
+# GitHub Pages Configuration
+node_modules/
+.DS_Store
+*.log
+*.swp
+*~
+.env
+.idea/
+.vscode/
+*.bak
