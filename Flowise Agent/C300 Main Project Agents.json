@@ -4,8 +4,8 @@
       "id": "startAgentflow_0",
       "type": "agentFlow",
       "position": {
-        "x": 3.5,
-        "y": 119.5
+        "x": -2.5,
+        "y": 104.5
       },
       "data": {
         "id": "startAgentflow_0",
@@ -174,7 +174,7 @@
         "inputAnchors": [],
         "inputs": {
           "startInputType": "chatInput",
-          "startEphemeralMemory": false,
+          "startEphemeralMemory": true,
           "startState": [
             {
               "key": "zipFileNames",
@@ -196,8 +196,8 @@
       "width": 103,
       "height": 66,
       "positionAbsolute": {
-        "x": 3.5,
-        "y": 119.5
+        "x": -2.5,
+        "y": 104.5
       },
       "selected": false,
       "dragging": false
@@ -205,8 +205,8 @@
     {
       "id": "agentAgentflow_0",
       "position": {
-        "x": 161.25,
-        "y": 113.5
+        "x": 138.75,
+        "y": 100.5
       },
       "data": {
         "id": "agentAgentflow_0",
@@ -515,7 +515,7 @@
               "agentMemoryType": "conversationSummaryBuffer"
             },
             "id": "agentAgentflow_0-input-agentMemoryMaxTokenLimit-number",
-            "display": true
+            "display": false
           },
           {
             "label": "Input Message",
@@ -658,33 +658,24 @@
           "agentMessages": [
             {
               "role": "system",
-              "content": "<p>You will receive a JSON array called zipFileNames.</p><p>Here are the filenames: <span class=\"variable\" data-type=\"mention\" data-id=\"zipFileNames\" data-label=\"zipFileNames\">{{ zipFileNames }}</span></p><p>Use ONLY the filenames listed above. Do NOT invent, assume, or add any filenames not present in zipFileNames.</p><p>For each filename, return:</p><p>{</p><p>  \"filename\": \"...\",</p><p>  \"type\": \"...\",</p><p>  \"contents\": \"...\"</p><p>}</p><p>If you cannot infer type or contents, return \"Unknown\" for both fields.</p><p>If zipFileNames is empty or undefined, return:</p><p>{ \"evidenceSummary\": [] }</p><p>Do not guess. Do not add extra files. Do not return code or commentary. Only return valid JSON.</p><p></p>"
+              "content": "You will receive a list of filenames from a ZIP file: {{ zipFileNames }}. For EACH filename, analyze the extension and name to determine the file type and likely contents. Return ONLY valid JSON in this exact format: {\"evidenceSummary\": [{\"filename\": \"downloading.pcapng\", \"type\": \"Packet Capture\", \"contents\": \"Network traffic data\"}, {\"filename\": \"Final_Answers_2025.xlsx\", \"type\": \"Excel Spreadsheet\", \"contents\": \"Forensic analysis results\"}]}. Common types: .pcapng=Packet Capture, .xlsx=Excel, .mem=Memory Dump, .zip=Archive, .docx=Document. If empty list, return {\"evidenceSummary\": []}. Return ONLY JSON, no other text."
             }
           ],
-          "agentTools": "",
+          "agentTools": [],
           "agentKnowledgeDocumentStores": "",
           "agentKnowledgeVSEmbeddings": "",
           "agentEnableMemory": false,
-          "agentReturnResponseAs": "userMessage",
-          "agentStructuredOutput": [
-            {
-              "key": "evidenceSummary",
-              "type": "jsonArray",
-              "enumValues": "",
-              "jsonSchema": "{\n  \"type\": \"array\",\n  \"items\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"filename\": { \"type\": \"string\" },\n      \"type\": { \"type\": \"string\" },\n      \"contents\": { \"type\": \"string\" }\n    },\n    \"required\": [\"filename\", \"type\", \"contents\"]\n  }\n}\n",
-              "description": "Array of evidence objects with filename, type, and contents"
-            }
-          ],
+          "agentReturnResponseAs": "assistantMessage",
+          "agentStructuredOutput": [],
           "agentUpdateState": "",
           "agentModelConfig": {
             "credential": "",
             "modelName": "llama-3.1-8b-instant",
             "temperature": "0.0",
             "maxTokens": "512",
-            "streaming": true,
+            "streaming": false,
             "agentModel": "groqChat"
-          },
-          "agentMemoryMaxTokenLimit": "512"
+          }
         },
         "outputAnchors": [
           {
@@ -701,8 +692,8 @@
       "height": 72,
       "selected": false,
       "positionAbsolute": {
-        "x": 161.25,
-        "y": 113.5
+        "x": 138.75,
+        "y": 100.5
       },
       "dragging": false
     }

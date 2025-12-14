@@ -142,6 +142,7 @@ git push -u origin main
 - **Message Display**: User and bot messages with distinct styling
 - **Typing Indicator**: Animated dots showing bot is processing
 - **Welcome Screen**: Quick-start buttons for common topics
+- **Inline File Cards**: Uploaded ZIP cards render beside user text (right-aligned) and persist in the chat transcript
 
 ### File Upload System
 - **Multi-file Support**: Upload multiple files simultaneously
@@ -149,6 +150,7 @@ git push -u origin main
 - **File List Display**: Shows uploaded files before sending
 - **File Removal**: Easy removal of selected files
 - **Size Validation**: Maximum 25MB per file
+- **Auto Type Detection**: Maps common forensic extensions (pcap, mem, xlsx, etc.) to human-readable labels
 
 ### Information Panel
 - **Tips**: How to use the platform effectively
@@ -240,6 +242,6 @@ This is an educational platform. For actual forensic investigations:
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: December 2025  
+**Version**: 1.1  
+**Last Updated**: 14th December 2025  
 **Created for**: Digital Forensics Education (Diploma Level)
