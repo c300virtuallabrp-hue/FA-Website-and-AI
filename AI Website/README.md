@@ -174,6 +174,11 @@ git push -u origin main
   - Archives (.zip, .rar, .7z)
   - And 30+ more forensic-relevant formats
 - **Developer Tools**: Console logging for debugging ZIP extraction process
+- **Report Generation**: Flexible natural language triggers
+  - Keywords: "generate", "create", "make", "build", "produce"
+  - Examples: "generate a report", "make me a report", "create report"
+  - Automatic text report fallback when Word document generation unavailable
+  - Single user message display (duplicate prevention)
 
 ### Information Panel
 - **Tips**: How to use the platform effectively
@@ -253,9 +258,11 @@ For issues, suggestions, or contributions:
 - ✅ **Microsoft File Detection**: Conditional routing for Office documents (Word, Excel, PowerPoint)
 - ✅ **Document Parsing**: Server-side extraction of text from .docx, .xlsx, .pptx files
 - ✅ **LLM Analysis**: Google Gemini 2.5 Pro analyzes extracted document content
-- ✅ **Report Generation**: Word document report compilation with forensic findings
+- ✅ **Report Generation**: Word document report compilation with forensic findings (Note: Currently using .txt fallback)
+- ✅ **Flexible Report Triggers**: Natural language support - "generate", "create", "make me", "build", "produce" + "report"
 - ✅ **Visual Feedback**: Real-time processing status with color-coded success/error states
 - ✅ **Race Condition Fix**: Prevents premature submission during async ZIP processing
+- ✅ **Duplicate Message Prevention**: Single user message display for report requests
 - ✅ **Developer Logging**: Comprehensive console output for debugging ([QUERY], [UNZIP], [REPORT] prefixes)
 - ✅ **MIME Type Detection**: 60+ forensic file format MIME type mappings
 - ✅ **Text Previews**: Automatic preview extraction for text-based evidence files (500 char limit)

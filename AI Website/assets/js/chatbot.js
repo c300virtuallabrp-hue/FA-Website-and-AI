@@ -470,7 +470,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Check if user wants to generate a report
-    const reportIntent = /generate\s+a\s+report|create\s+report/i.test(userMsg);
+    const reportIntent = /(generate|create|make|build|produce)(\s+me)?(\s+a)?\s+report/i.test(userMsg);
     if (reportIntent) {
       if (zipFileNames.length === 0) {
         errorDiv.textContent = "Please upload a ZIP file first—no files to include in the report.";
@@ -480,7 +480,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       try {
-        messages.innerHTML += `<div class='chat-msg user'><b>You:</b> ${renderMarkdown(userMsg)}</div>`;
         messages.innerHTML += `<div class='chat-msg bot' style='color:#888;'>📄 Generating Word document report...</div>`;
         messages.scrollTop = messages.scrollHeight;
 
