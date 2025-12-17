@@ -67,8 +67,10 @@ c300-project/
 
 - **HTML5**: Semantic markup
 - **CSS3**: Modern styling with CSS variables and Grid/Flexbox
-- **Vanilla JavaScript**: No dependencies, fully static
+- **Vanilla JavaScript**: ES6+ with async/await for file processing
+- **JSZip Library**: Client-side ZIP file extraction and analysis
 - **Font Awesome 6**: Icon library
+- **Flowise AI**: Cloud-based agent workflow for evidence analysis
 - **GitHub Pages**: Automatic deployment
 
 ## Browser Compatibility
@@ -142,15 +144,36 @@ git push -u origin main
 - **Message Display**: User and bot messages with distinct styling
 - **Typing Indicator**: Animated dots showing bot is processing
 - **Welcome Screen**: Quick-start buttons for common topics
-- **Inline File Cards**: Uploaded ZIP cards render beside user text (right-aligned) and persist in the chat transcript
+- **Inline File Cards**: ChatGPT-style file cards with:
+  - File icon and name
+  - ZIP Archive type label
+  - Processing status with color indicators
+  - Remove button with X icon
+  - Visual feedback (green border + background tint on success)
 
 ### File Upload System
-- **Multi-file Support**: Upload multiple files simultaneously
-- **File Type Validation**: Supports forensic-relevant file types
-- **File List Display**: Shows uploaded files before sending
-- **File Removal**: Easy removal of selected files
-- **Size Validation**: Maximum 25MB per file
-- **Auto Type Detection**: Maps common forensic extensions (pcap, mem, xlsx, etc.) to human-readable labels
+- **ZIP File Processing**: Advanced asynchronous ZIP file extraction
+- **File Metadata Collection**: Automatically extracts:
+  - Filename and path within ZIP
+  - File type and extension mapping
+  - File size in bytes
+  - MIME type detection
+  - Text preview (first 500 chars for .txt, .csv, .json, .xml, .md, .html, .log files)
+- **Visual Processing Feedback**: 
+  - Real-time "Processing ZIP file..." status in file card
+  - Green success state with file count: "All X files uploaded successfully"
+  - Colored border (green for success, red for error)
+  - Background tint for visual confirmation
+- **Race Condition Prevention**: Blocks form submission during ZIP processing to ensure metadata is fully loaded
+- **File Removal**: Easy removal with automatic state cleanup
+- **Auto Type Detection**: Comprehensive mapping for forensic file types:
+  - Packet captures (.pcapng, .pcap)
+  - Memory dumps (.mem, .dmp, .vmem)
+  - Microsoft Office (.xlsx, .docx, .pptx)
+  - Forensic images (.e01, .aff, .raw, .dd)
+  - Archives (.zip, .rar, .7z)
+  - And 30+ more forensic-relevant formats
+- **Developer Tools**: Console logging for debugging ZIP extraction process
 
 ### Information Panel
 - **Tips**: How to use the platform effectively
@@ -220,16 +243,40 @@ For issues, suggestions, or contributions:
 2. Submit pull requests for improvements
 3. Provide feedback on content accuracy
 
+## Recent Updates (December 2025)
+
+### Version 1.2 - Enhanced File Processing
+- ✅ **Metadata Extraction**: Full file metadata collection from ZIP archives (size, MIME, preview)
+- ✅ **Flowise Integration**: Connected to Groq LLM via Flowise Cloud for intelligent evidence analysis
+- ✅ **Visual Feedback**: Real-time processing status with color-coded success/error states
+- ✅ **Race Condition Fix**: Prevents premature submission during async ZIP processing
+- ✅ **Developer Logging**: Comprehensive console output for debugging file extraction
+- ✅ **MIME Type Detection**: 30+ forensic file format MIME type mappings
+- ✅ **Text Previews**: Automatic preview extraction for text-based evidence files
+
+### Flowise Agent Configuration
+The File Agent now receives and processes:
+- `zipFileNames`: Array of extracted filenames
+- `zipFileMetadata`: Array of metadata objects containing:
+  - `filename`: Name of the file
+  - `path`: Full path within ZIP
+  - `type`: Human-readable file type
+  - `sizeBytes`: File size in bytes
+  - `mime`: MIME type string
+  - `preview`: First 500 characters (for text files)
+
+Agent outputs structured JSON with evidence summary including metadata for each file.
+
 ## Future Enhancements
 
-- Backend integration for real file analysis
 - Multi-language support
 - Export conversation transcripts
-- Integration with forensic tools APIs
+- Integration with additional forensic tools APIs
 - Video tutorials and demonstrations
 - Interactive scenarios and case studies
 - Certification tracking for students
 - Advanced analytics for educators
+- Real-time file content analysis (beyond metadata)
 
 ## Disclaimer
 
@@ -242,6 +289,7 @@ This is an educational platform. For actual forensic investigations:
 
 ---
 
-**Version**: 1.1  
-**Last Updated**: 14th December 2025  
-**Created for**: Digital Forensics Education (Diploma Level)
+**Version**: 1.2  
+**Last Updated**: 17th December 2025  
+**Created for**: Digital Forensics Education (Diploma Level)  
+**Key Technologies**: JSZip, Flowise AI, Groq LLM (llama-3.1-8b-instant)

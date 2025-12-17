@@ -179,6 +179,10 @@
             {
               "key": "zipFileNames",
               "value": "{{zipFileNames}}"
+            },
+            {
+              "key": "zipFileMetadata",
+              "value": "{{zipFileMetadata}}"
             }
           ],
           "startPersistState": ""
@@ -658,7 +662,7 @@
           "agentMessages": [
             {
               "role": "system",
-              "content": "You will receive a list of filenames from a ZIP file: {{ zipFileNames }}. For EACH filename, analyze the extension and name to determine the file type and likely contents. Return ONLY valid JSON in this exact format: {\"evidenceSummary\": [{\"filename\": \"downloading.pcapng\", \"type\": \"Packet Capture\", \"contents\": \"Network traffic data\"}, {\"filename\": \"Final_Answers_2025.xlsx\", \"type\": \"Excel Spreadsheet\", \"contents\": \"Forensic analysis results\"}]}. Common types: .pcapng=Packet Capture, .xlsx=Excel, .mem=Memory Dump, .zip=Archive, .docx=Document. If empty list, return {\"evidenceSummary\": []}. Return ONLY JSON, no other text."
+              "content": "You will receive a list of filenames from a ZIP file: {{ zipFileNames }} and a matching array of file metadata: {{ zipFileMetadata }}. Each metadata item has fields like {\\\"filename\\\":\\\"...\\\",\\\"type\\\":\\\"...\\\",\\\"sizeBytes\\\":123,\\\"mime\\\":\\\"...\\\",\\\"preview\\\":\\\"...\\\"}. For EACH filename, use the metadata (when available) and the extension/name to determine the file type and infer likely contents. Return ONLY valid JSON in this exact format: {\\\"evidenceSummary\\\": [{\\\"filename\\\":\\\"downloading.pcapng\\\",\\\"type\\\":\\\"Packet Capture\\\",\\\"contents\\\":\\\"Network traffic data\\\",\\\"metadata\\\":{...}}, {\\\"filename\\\":\\\"Final_Answers_2025.xlsx\\\",\\\"type\\\":\\\"Excel Spreadsheet\\\",\\\"contents\\\":\\\"Forensic analysis results\\\",\\\"metadata\\\":{...}}]}. If metadata is not available for a file, set \\\"metadata\\\": null. Common types: .pcapng=Packet Capture, .xlsx=Excel, .mem=Memory Dump, .zip=Archive, .docx=Document. If empty list, return {\\\"evidenceSummary\\\": []}. Return ONLY JSON, no other text."
             }
           ],
           "agentTools": [],
