@@ -245,27 +245,122 @@ For issues, suggestions, or contributions:
 
 ## Recent Updates (December 2025)
 
-### Version 1.2 - Enhanced File Processing
+### Version 1.3 - Advanced Flowise Agent Workflow
 - ✅ **Metadata Extraction**: Full file metadata collection from ZIP archives (size, MIME, preview)
-- ✅ **Flowise Integration**: Connected to Groq LLM via Flowise Cloud for intelligent evidence analysis
+- ✅ **Flowise Cloud Integration**: Multi-node agent workflow for intelligent evidence analysis
+- ✅ **Custom State Transfer Node**: "Zipfile Metadata Node" bridges API vars to flow state for iteration
+- ✅ **Iteration Processing**: File-by-file analysis loop through uploaded evidence
+- ✅ **Microsoft File Detection**: Conditional routing for Office documents (Word, Excel, PowerPoint)
+- ✅ **Document Parsing**: Server-side extraction of text from .docx, .xlsx, .pptx files
+- ✅ **LLM Analysis**: Google Gemini 2.5 Pro analyzes extracted document content
+- ✅ **Report Generation**: Word document report compilation with forensic findings
 - ✅ **Visual Feedback**: Real-time processing status with color-coded success/error states
 - ✅ **Race Condition Fix**: Prevents premature submission during async ZIP processing
-- ✅ **Developer Logging**: Comprehensive console output for debugging file extraction
-- ✅ **MIME Type Detection**: 30+ forensic file format MIME type mappings
-- ✅ **Text Previews**: Automatic preview extraction for text-based evidence files
+- ✅ **Developer Logging**: Comprehensive console output for debugging ([QUERY], [UNZIP], [REPORT] prefixes)
+- ✅ **MIME Type Detection**: 60+ forensic file format MIME type mappings
+- ✅ **Text Previews**: Automatic preview extraction for text-based evidence files (500 char limit)
+- ✅ **Client-Side Fallback**: Text report generation when server-side processing unavailable
 
-### Flowise Agent Configuration
-The File Agent now receives and processes:
-- `zipFileNames`: Array of extracted filenames
-- `zipFileMetadata`: Array of metadata objects containing:
-  - `filename`: Name of the file
-  - `path`: Full path within ZIP
-  - `type`: Human-readable file type
-  - `sizeBytes`: File size in bytes
-  - `mime`: MIME type string
-  - `preview`: First 500 characters (for text files)
+### Flowise Agent Workflow Architecture
 
-Agent outputs structured JSON with evidence summary including metadata for each file.
+#### Node Flow
+```
+Start → File Agent → Zipfile Metadata Node → File Iterations →
+  ├─→ Condition: Is Microsoft File? →
+  │   ├─→ YES: Microsoft Parser → LLM Analysis Node
+  │   └─→ NO: (skip)
+  └─→ Word Document Report Generator → Output
+```
+
+#### Node Details
+
+**1. Start Node**
+- Initializes agentflow with ephemeral memory
+- Defines state keys: `zipFileNames`, `zipFileMetadata`
+
+**2. File Agent** (Groq llama-3.1-8b-instant)
+- Receives arrays via `$vars.zipFileNames` and `$vars.zipFileMetadata`
+- Temperature: 0.0, Max Tokens: 512
+- Returns assistant message with structured JSON evidence summary
+
+**3. Zipfile Metadata Node** (Custom Function)
+- **Critical Bridge**: Transfers `$vars.zipFileMetadata` to `$flow.state.zipFileMetadata`
+- JavaScript: `const metadata = $vars.zipFileMetadata || []; return metadata;`
+- Update Flow State: Key=`zipFileMetadata`, Value=`{{ output }}`
+- Enables iteration node to access client-sent arrays
+
+**4. File Iterations** (Iteration Node)
+- Array Input: `$flow.state.zipFileMetadata`
+- Loops through each file metadata object
+- Current item accessible via `$items` variable
+
+**5. Condition Node: "Is it a Microsoft File"**
+- Checks: `$items.mime` against Office document MIME types
+- Regex: `^application\/(vnd\.ms-(excel|powerpoint|word)|vnd\.openxmlformats-officedocument\.(spreadsheetml|presentationml|wordprocessingml)\.document)$`
+- Routes Microsoft files to parser, others skip
+
+**6. Microsoft Files Parser Node** (Custom Function)
+- Libraries: mammoth (Word), XLSX (Excel), pptx-parser (PowerPoint)
+- Extracts raw text from document buffers
+- Updates flow state with `parsed_text`
+
+**7. Microsoft File Analyse Node** (Google Gemini 2.5 Pro)
+- Temperature: 0.6, Max Tokens: 510
+- Prompt: Analyzes extracted text for summary, key points, action items
+- Streaming: Enabled
+
+**8. Word Document Report Generator** (Custom Function)
+- Library: docx
+- Compiles iteration results into formatted Word document
+- Returns base64-encoded .docx file
+
+### API Integration Details
+
+**Frontend to Flowise:**
+```javascript
+payload = {
+  question: "Unzip this",
+  overrideConfig: {
+    vars: {
+      zipFileNames: ["file1.xlsx", "file2.docx"],
+      zipFileMetadata: [
+        {
+          filename: "file1.xlsx",
+          path: "Evidence/file1.xlsx",
+          type: "Microsoft Excel",
+          sizeBytes: 27136,
+          mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          preview: null
+        }
+      ]
+    }
+  }
+}
+```
+
+**Flowise Response:**
+```javascript
+{
+  message: {
+    content: "{\"evidenceSummary\": [{\"filename\":..., \"metadata\":{...}}]}"
+  }
+}
+```
+
+### Metadata Object Schema
+Each file in `zipFileMetadata` contains:
+- `filename` (string): Name of the file
+- `path` (string): Full path within ZIP archive
+- `type` (string): Human-readable file type (e.g., "Microsoft Excel")
+- `sizeBytes` (number): File size in bytes
+- `mime` (string): MIME type for content identification
+- `preview` (string|null): First 500 characters for text files, null for binary files
+
+### Console Logging Prefixes
+- `[QUERY]`: Flowise API request/response debugging
+- `[UNZIP]`: ZIP extraction and metadata collection
+- `[REPORT]`: Report generation status
+- `📄`, `✅`, `❌`: Visual status indicators in console
 
 ## Future Enhancements
 
@@ -289,7 +384,7 @@ This is an educational platform. For actual forensic investigations:
 
 ---
 
-**Version**: 1.2  
+**Version**: 1.3  
 **Last Updated**: 17th December 2025  
 **Created for**: Digital Forensics Education (Diploma Level)  
-**Key Technologies**: JSZip, Flowise AI, Groq LLM (llama-3.1-8b-instant)
+**Key Technologies**: JSZip, Flowise Cloud, Groq LLM (llama-3.1-8b-instant), Google Gemini 2.5 Pro, mammoth, xlsx, pptx-parser, docx

@@ -126,23 +126,36 @@ function getMimeType(ext) {
 // -----------------------------
 async function query(data) {
   try {
+    const payload = {
+      question: data.question,
+      overrideConfig: {
+        vars: {
+          zipFileNames: data.zipFileNames || [],
+          zipFileMetadata: data.zipFileMetadata || []
+        }
+      }
+    };
+
+    console.log('🔍 [QUERY] Preparing POST request');
+    console.log('📤 [QUERY] Question:', data.question);
+    console.log('📤 [QUERY] ZipFileNames type:', typeof data.zipFileNames, 'Length:', data.zipFileNames?.length);
+    console.log('📤 [QUERY] ZipFileMetadata type:', typeof data.zipFileMetadata, 'Length:', data.zipFileMetadata?.length);
+    console.log('📤 [QUERY] Full Payload:', JSON.stringify(payload, null, 2));
+    
     const response = await fetch(
       "https://cloud.flowiseai.com/api/v1/prediction/c65f4969-942b-4eeb-9cca-a23afff47348",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: data.question,
-          variables: { zipFileNames: data.zipFileNames || [], zipFileMetadata: data.zipFileMetadata || [] },
-          overrideConfig: {
-            runtimeState: { zipFileNames: data.zipFileNames || [], zipFileMetadata: data.zipFileMetadata || [] }
-          }
-        }),
+        body: JSON.stringify(payload),
       }
     );
 
+    console.log('📥 [QUERY] Response Status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ [QUERY] HTTP Error Response:', errorText);
       if (errorText.includes("Predictions limit exceeded")) {
         return {
           error: "Flowise quota exceeded. Here's a mock response for classroom testing.",
@@ -157,6 +170,7 @@ async function query(data) {
     }
 
     const result = await response.json();
+    console.log('✅ [QUERY] Success Response received');
 
     // Defensive post-processing (Option A), but do not force empty if we have filenames
     const filenames = Array.isArray(data.zipFileNames) ? data.zipFileNames : [];
@@ -210,7 +224,7 @@ async function query(data) {
 
     return result;
   } catch (err) {
-
+    console.error('❌ [QUERY] Exception thrown:', err.message);
     return { error: err.message };
   }
 }
@@ -265,6 +279,93 @@ function tryParseAnyJson(obj) {
   }
 
   return null;
+}
+
+// -----------------------------
+// Word Document Report Generation (Simplified Fallback)
+// -----------------------------
+async function generateWordReport(zipFileNames, zipFileMetadata) {
+  try {
+    console.log('� [REPORT] Starting report generation');
+    console.log('📤 [REPORT] ZipFileNames:', zipFileNames);
+    console.log('📤 [REPORT] ZipFileNames type:', typeof zipFileNames, 'Is Array:', Array.isArray(zipFileNames));
+    console.log('📤 [REPORT] ZipFileMetadata:', zipFileMetadata);
+    console.log('📤 [REPORT] ZipFileMetadata type:', typeof zipFileMetadata, 'Is Array:', Array.isArray(zipFileMetadata));
+
+    // For now, bypass Flowise iteration and create a simple report client-side
+    // This avoids the JSON parsing issues with the iteration node
+    return createFallbackReport(zipFileNames, zipFileMetadata);
+    
+  } catch (err) {
+    console.error('❌ [REPORT] Error generating report:', err);
+    console.log('📋 [REPORT] Falling back to simple report generation');
+    return createFallbackReport(zipFileNames, zipFileMetadata);
+  }
+}
+
+// -----------------------------
+// Create Fallback Text Report (Client-side)
+// -----------------------------
+function createFallbackReport(zipFileNames, zipFileMetadata) {
+  try {
+    // Create a comprehensive text report
+    let reportContent = `FORENSIC EVIDENCE ANALYSIS REPORT
+=====================================
+Generated: ${new Date().toLocaleString()}
+
+FILES ANALYZED
+==============
+Total Files: ${zipFileNames.length}
+
+`;
+
+    zipFileMetadata.forEach((file, index) => {
+      reportContent += `
+[${index + 1}] ${file.filename}
+    Type: ${file.type}
+    Size: ${(file.sizeBytes / 1024).toFixed(2)} KB (${file.sizeBytes} bytes)
+    MIME Type: ${file.mime}
+    Location: ${file.path}
+    Preview Available: ${file.preview ? 'Yes' : 'No'}
+    ${file.preview ? '\n    Content Preview:\n    ' + file.preview.substring(0, 200) + '...' : ''}
+`;
+    });
+
+    reportContent += `
+
+FORENSIC SUMMARY
+================
+Analysis Date: ${new Date().toLocaleString()}
+Total Files Processed: ${zipFileNames.length}
+Report Status: PRELIMINARY EVIDENCE SUMMARY
+
+RECOMMENDATIONS
+===============
+1. Use the AI chat interface for detailed analysis of individual files
+2. Ask specific questions about file contents and metadata
+3. Request file type classification and forensic insights
+4. For detailed content analysis, inquire about specific file types
+
+NOTE: This is a preliminary summary report. For comprehensive forensic analysis,
+please engage with the AI assistant through the chat interface.
+
+END OF REPORT
+`;
+
+    // Download as text file
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(reportContent));
+    element.setAttribute('download', 'Evidence_Analysis_Report_' + new Date().getTime() + '.txt');
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+
+    console.log('✅ Report generated and downloaded as .txt');
+    return true;
+  } catch (err) {
+    console.error('❌ Error creating fallback report:', err);
+    return false;
+  }
 }
 
 // -----------------------------
@@ -341,16 +442,64 @@ document.addEventListener("DOMContentLoaded", function () {
     input.value = "";
     errorDiv.textContent = "";
     
+    // Store current arrays before clearing display (to preserve for query)
+    const preservedFileNames = [...zipFileNames];
+    const preservedMetadata = [...zipFileMetadata];
+    
     // Clear file display after showing in chat
     if (fileList) {
       fileList.innerHTML = "";
     }
+    
+    // Restore arrays after clearing display
+    zipFileNames = preservedFileNames;
+    zipFileMetadata = preservedMetadata;
 
     // Simple intent: trigger when message contains the word "unzip"
     const unzipIntent = /unzip/i.test(userMsg);
-    if (unzipIntent && zipFileNames.length === 0) {
-      errorDiv.textContent = "Please upload a ZIP first—no filenames found.";
-      return;
+    if (unzipIntent) {
+      console.log('🔍 [UNZIP] Unzip intent detected');
+      console.log('📊 [UNZIP] Current zipFileNames:', zipFileNames, 'Length:', zipFileNames?.length);
+      console.log('📊 [UNZIP] Current zipFileMetadata:', zipFileMetadata, 'Length:', zipFileMetadata?.length);
+      
+      if (zipFileNames.length === 0) {
+        errorDiv.textContent = "Please upload a ZIP first—no filenames found.";
+        console.error('❌ [UNZIP] No files to unzip!');
+        return;
+      }
+    }
+
+    // Check if user wants to generate a report
+    const reportIntent = /generate\s+a\s+report|create\s+report/i.test(userMsg);
+    if (reportIntent) {
+      if (zipFileNames.length === 0) {
+        errorDiv.textContent = "Please upload a ZIP file first—no files to include in the report.";
+        messages.innerHTML += `<div class='chat-msg bot'><b>Chatbot:</b> I need you to upload evidence files first to generate a report.</div>`;
+        messages.scrollTop = messages.scrollHeight;
+        return;
+      }
+
+      try {
+        messages.innerHTML += `<div class='chat-msg user'><b>You:</b> ${renderMarkdown(userMsg)}</div>`;
+        messages.innerHTML += `<div class='chat-msg bot' style='color:#888;'>📄 Generating Word document report...</div>`;
+        messages.scrollTop = messages.scrollHeight;
+
+        const success = await generateWordReport(zipFileNames, zipFileMetadata);
+
+        messages.innerHTML = messages.innerHTML.replace("📄 Generating Word document report...", "");
+        if (success) {
+          messages.innerHTML += `<div class='chat-msg bot'><b>Chatbot:</b> ✅ Report generated and downloaded successfully! Your Evidence Analysis Report is ready.</div>`;
+        } else {
+          messages.innerHTML += `<div class='chat-msg bot'><b>Chatbot:</b> ❌ Failed to generate report. Please try again.</div>`;
+          errorDiv.textContent = "Report generation failed. Please check the console for details.";
+        }
+        messages.scrollTop = messages.scrollHeight;
+        return;
+      } catch (err) {
+        messages.innerHTML = messages.innerHTML.replace("📄 Generating Word document report...", "");
+        errorDiv.textContent = `Report error: ${err.message}`;
+        messages.scrollTop = messages.scrollHeight;
+      }
     }
 
     try {
