@@ -250,15 +250,31 @@ For issues, suggestions, or contributions:
 
 ## Recent Updates (December 2025)
 
+### Version 1.4 - Client-Side Word Document Generation (December 18, 2025)
+- ✅ **Word Document Generation**: Full client-side .docx report generation using docx library v7.8.2
+- ✅ **Browser-Based Reports**: Word documents created directly in browser without server dependencies
+- ✅ **Automatic Download**: Generated reports download automatically as `.docx` files
+- ✅ **Professional Formatting**: Reports include:
+  - Title with heading levels (H1, H2, H3)
+  - Timestamp of generation
+  - Files in Evidence section with file details
+  - Detailed Analysis section (when available from LLM)
+  - Bullet points for file listings
+- ✅ **Dynamic Library Loading**: Fallback mechanism loads docx library if missing on page load
+- ✅ **Analysis Integration**: Incorporates LLM analysis results from Flowise iteration workflow
+- ✅ **Evidence Summary**: Includes comprehensive file metadata in reports
+- ✅ **Error Handling**: Graceful fallback with detailed error messages
+- ✅ **CDN Integration**: Uses unpkg.com CDN for docx library (v7.8.2)
+- ✅ **Library Detection**: Smart detection of docx global variable with multiple fallbacks
+
 ### Version 1.3 - Advanced Flowise Agent Workflow
 - ✅ **Metadata Extraction**: Full file metadata collection from ZIP archives (size, MIME, preview)
 - ✅ **Flowise Cloud Integration**: Multi-node agent workflow for intelligent evidence analysis
 - ✅ **Custom State Transfer Node**: "Zipfile Metadata Node" bridges API vars to flow state for iteration
 - ✅ **Iteration Processing**: File-by-file analysis loop through uploaded evidence
 - ✅ **Microsoft File Detection**: Conditional routing for Office documents (Word, Excel, PowerPoint)
-- ✅ **Document Parsing**: Server-side extraction of text from .docx, .xlsx, .pptx files
+- ✅ **Document Parsing**: Custom function extracts file information from metadata
 - ✅ **LLM Analysis**: Google Gemini 2.5 Pro analyzes extracted document content
-- ✅ **Report Generation**: Word document report compilation with forensic findings (Note: Currently using .txt fallback)
 - ✅ **Flexible Report Triggers**: Natural language support - "generate", "create", "make me", "build", "produce" + "report"
 - ✅ **Visual Feedback**: Real-time processing status with color-coded success/error states
 - ✅ **Race Condition Fix**: Prevents premature submission during async ZIP processing
@@ -317,9 +333,9 @@ Start → File Agent → Zipfile Metadata Node → File Iterations →
 - Streaming: Enabled
 
 **8. Word Document Report Generator** (Custom Function)
-- Library: docx
-- Compiles iteration results into formatted Word document
-- Returns base64-encoded .docx file
+- Returns evidence summary and analysis results as JSON
+- Client-side docx library (v7.8.2) generates Word document in browser
+- Automatic download of formatted .docx report
 
 ### API Integration Details
 
@@ -349,10 +365,28 @@ payload = {
 ```javascript
 {
   message: {
-    content: "{\"evidenceSummary\": [{\"filename\":..., \"metadata\":{...}}]}"
+    content: "{\"evidenceSummary\": [{\"filename\":..., \"type\":..., \"contents\":...}], \"analysisResults\": [\"analysis text...\"]}"
   }
 }
 ```
+
+### Word Document Generation
+
+**Client-Side Process:**
+1. Frontend calls Flowise API with "generate report" intent
+2. Flowise returns `evidenceSummary` and `analysisResults` in JSON
+3. Browser loads docx library (v7.8.2) from CDN if not already loaded
+4. JavaScript creates Document with sections:
+   - Title: "Evidence Analysis Report" (Heading 1)
+   - Generation timestamp (Heading 2)
+   - "Files in Evidence" section with bullet points (Heading 2, 3)
+   - "Detailed Analysis" section with LLM results (Heading 2)
+5. `Packer.toBlob()` generates binary .docx file
+6. Browser triggers automatic download as `Evidence_Report.docx`
+
+**Libraries Used:**
+- `docx` v7.8.2 from unpkg.com CDN
+- Browser APIs: `Blob`, `URL.createObjectURL`, `document.createElement`
 
 ### Metadata Object Schema
 Each file in `zipFileMetadata` contains:
@@ -391,7 +425,7 @@ This is an educational platform. For actual forensic investigations:
 
 ---
 
-**Version**: 1.3  
-**Last Updated**: 17th December 2025  
+**Version**: 1.4  
+**Last Updated**: 18th December 2025  
 **Created for**: Digital Forensics Education (Diploma Level)  
-**Key Technologies**: JSZip, Flowise Cloud, Groq LLM (llama-3.1-8b-instant), Google Gemini 2.5 Pro, mammoth, xlsx, pptx-parser, docx
+**Key Technologies**: JSZip, Flowise Cloud, Groq LLM (llama-3.1-8b-instant), Google Gemini 2.5 Pro, docx (client-side v7.8.2)

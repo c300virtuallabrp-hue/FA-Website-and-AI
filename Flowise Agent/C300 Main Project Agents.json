@@ -183,6 +183,18 @@
             {
               "key": "zipFileMetadata",
               "value": "{{ output }}"
+            },
+            {
+              "key": "parsed_text",
+              "value": "{{parsed_text}}"
+            },
+            {
+              "key": "wordDocumentReport",
+              "value": "{{wordDocumentReport}}"
+            },
+            {
+              "key": "analysisResults",
+              "value": "{{analysisResults}}"
             }
           ],
           "startPersistState": ""
@@ -209,7 +221,7 @@
     {
       "id": "agentAgentflow_0",
       "position": {
-        "x": -53.911535570204876,
+        "x": -57.592714930016555,
         "y": 99.79523922082257
       },
       "data": {
@@ -662,14 +674,14 @@
           "agentMessages": [
             {
               "role": "system",
-              "content": "<p>You will receive arrays of filenames and metadata from a ZIP file: <span class=\"variable\" data-type=\"mention\" data-id=\"$vars.zipFileNames\" data-label=\"$vars.zipFileNames\">{{ $vars.zipFileNames }}</span> and <span class=\"variable\" data-type=\"mention\" data-id=\"$vars.zipFileMetadata\" data-label=\"$vars.zipFileMetadata\">{{ $vars.zipFileMetadata }}</span>. Each metadata item has {filename, type, sizeBytes, mime, preview}. Analyze ALL files and return ONLY valid JSON: {\\\"evidenceSummary\\\": [{\\\"filename\\\":\\\"file.xlsx\\\",\\\"type\\\":\\\"Microsoft Excel\\\",\\\"contents\\\":\\\"Forensic data\\\",\\\"metadata\\\":{...}}]}. Return ONLY JSON, no other text.</p>"
+              "content": "<p>Acknowledge receipt of file data and pass it along for processing. Simply respond with: Processing files.</p>"
             }
           ],
           "agentTools": [],
           "agentKnowledgeDocumentStores": "",
           "agentKnowledgeVSEmbeddings": "",
           "agentEnableMemory": false,
-          "agentReturnResponseAs": "assistantMessage",
+          "agentReturnResponseAs": "userMessage",
           "agentStructuredOutput": [],
           "agentUpdateState": "",
           "agentModelConfig": {
@@ -696,7 +708,7 @@
       "height": 72,
       "selected": false,
       "positionAbsolute": {
-        "x": -53.911535570204876,
+        "x": -57.592714930016555,
         "y": 99.79523922082257
       },
       "dragging": false
@@ -704,7 +716,7 @@
     {
       "id": "iterationAgentflow_0",
       "position": {
-        "x": 505.21074129974136,
+        "x": 508.0297844164511,
         "y": -141.40952155835484
       },
       "data": {
@@ -751,7 +763,7 @@
       "height": 554,
       "selected": false,
       "positionAbsolute": {
-        "x": 505.21074129974136,
+        "x": 508.0297844164511,
         "y": -141.40952155835484
       },
       "dragging": false,
@@ -764,8 +776,8 @@
     {
       "id": "conditionAgentflow_0",
       "position": {
-        "x": 67,
-        "y": 163.00000000000003
+        "x": 95.19043116709815,
+        "y": 230.6570348010356
       },
       "data": {
         "id": "conditionAgentflow_0",
@@ -1038,15 +1050,15 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 572.2107412997414,
-        "y": 21.59047844164519
+        "x": 603.2202155835492,
+        "y": 89.24751324268075
       }
     },
     {
       "id": "customFunctionAgentflow_0",
       "position": {
-        "x": 349.9999999999998,
-        "y": 59.000000000000014
+        "x": 359.8666509084842,
+        "y": 150.61890129306897
       },
       "data": {
         "id": "customFunctionAgentflow_0",
@@ -1131,7 +1143,7 @@
               "variableValue": "<p><span class=\"variable\" data-type=\"mention\" data-id=\"$flow.state.zipFileMetadata\" data-label=\"$flow.state.zipFileMetadata\">{{ $flow.state.zipFileMetadata }}</span> </p>"
             }
           ],
-          "customFunctionJavascriptFunction": "const mammoth = require(\"mammoth\");\nconst XLSX = require(\"xlsx\");\nconst pptxParser = require(\"pptx-parser\");\n\nasync function run(input) {\n  const mime = input.mime;       // MIME type from your flow\n  const fileBuffer = input.file; // File buffer\n  let parsed_text = \"\";\n\n  try {\n    if (mime.includes(\"wordprocessingml.document\") || mime.includes(\"ms-word\")) {\n      // Word (.docx / .doc)\n      const result = await mammoth.extractRawText({ buffer: fileBuffer });\n      parsed_text = result.value;\n\n    } else if (mime.includes(\"spreadsheetml.document\") || mime.includes(\"ms-excel\")) {\n      // Excel (.xlsx / .xls)\n      const workbook = XLSX.read(fileBuffer, { type: \"buffer\" });\n      const sheetName = workbook.SheetNames[0];\n      const sheet = workbook.Sheets[sheetName];\n      parsed_text = XLSX.utils.sheet_to_csv(sheet);\n\n    } else if (mime.includes(\"presentationml.presentation\") || mime.includes(\"ms-powerpoint\")) {\n      // PowerPoint (.pptx / .ppt)\n      const slides = await pptxParser.parse(fileBuffer);\n      parsed_text = slides.map(slide => slide.text).join(\"\\n\");\n\n    } else {\n      parsed_text = \"Unsupported file type.\";\n    }\n  } catch (err) {\n    parsed_text = `Error parsing file: ${err.message}`;\n  }\n\n  return { parsed_text };\n}\n",
+          "customFunctionJavascriptFunction": "const mime = $items.mime;\nconst filename = $items.filename;\n\nreturn `File: ${filename}, Type: ${mime}`;",
           "customFunctionUpdateState": [
             {
               "key": "parsed_text",
@@ -1157,15 +1169,15 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 855.2107412997411,
-        "y": -82.40952155835483
+        "x": 867.8964353249353,
+        "y": 9.209379734714133
       }
     },
     {
       "id": "llmAgentflow_0",
       "position": {
-        "x": 705,
-        "y": 56.99999999999993
+        "x": 706.409521558355,
+        "y": 89.4189958421628
       },
       "data": {
         "id": "llmAgentflow_0",
@@ -1443,7 +1455,12 @@
           "llmUserMessage": "<p>You are analyzing a Microsoft Office file.</p><p>Here is the extracted text: <span class=\"variable\" data-type=\"mention\" data-id=\"parsed_text\" data-label=\"parsed_text\">{{ parsed_text }}</span>.</p><p>Please provide:</p><p>1. A summary of the document.</p><p>2. Key points or insights.</p><p>3. Any action items mentioned.</p><p></p>",
           "llmReturnResponseAs": "userMessage",
           "llmStructuredOutput": "",
-          "llmUpdateState": "",
+          "llmUpdateState": [
+            {
+              "key": "analysisResults",
+              "value": "<p><span class=\"variable\" data-type=\"mention\" data-id=\"$output\" data-label=\"$output\">{{ $output }}</span></p>"
+            }
+          ],
           "llmModelConfig": {
             "cache": "",
             "modelName": "gemini-2.5-pro",
@@ -1477,16 +1494,16 @@
       "height": 72,
       "selected": false,
       "positionAbsolute": {
-        "x": 1210.2107412997414,
-        "y": -84.40952155835491
+        "x": 1214.439305974806,
+        "y": -51.99052571619204
       },
       "dragging": false
     },
     {
       "id": "customFunctionAgentflow_1",
       "position": {
-        "x": 1672.704648757399,
-        "y": 101.06872652270715
+        "x": 1673.931708544003,
+        "y": 99.84166673610326
       },
       "data": {
         "id": "customFunctionAgentflow_1",
@@ -1563,15 +1580,15 @@
         "inputs": {
           "customFunctionInputVariables": [
             {
-              "variableName": "microsoftDocs",
-              "variableValue": "<p><span class=\"variable\" data-type=\"mention\" data-id=\"$flow.state.parsed_text\" data-label=\"$flow.state.parsed_text\">{{ $flow.state.parsed_text }}</span> </p>"
+              "variableName": "analysisResults",
+              "variableValue": "<p><span class=\"variable\" data-type=\"mention\" data-id=\"iterationAgentflow_0\" data-label=\"iterationAgentflow_0\">{{ iterationAgentflow_0 }}</span> </p>"
             }
           ],
-          "customFunctionJavascriptFunction": "const { Document, Packer, Paragraph, HeadingLevel, TextRun } = require(\"docx\");\n\nasync function run(input) {\n  const analyses = input.items; // Array of { filename, analysis }\n\n  const doc = new Document();\n\n  analyses.forEach(item => {\n    doc.addSection({\n      children: [\n        new Paragraph({\n          text: item.filename,\n          heading: HeadingLevel.HEADING_1,\n        }),\n        new Paragraph({\n          children: [new TextRun(item.analysis)],\n        }),\n        new Paragraph({ text: \"\" }) // spacer\n      ],\n    });\n  });\n\n  const buffer = await Packer.toBuffer(doc);\n  const base64 = buffer.toString(\"base64\");\n\n  // Flowise will output this\n  return { wordDocumentBase64: base64 };\n}\n",
+          "customFunctionJavascriptFunction": "// Get analysis results from iteration\nconst analyses = $analysisResults || [];\n\n// Get zipFileMetadata from flow state\nlet zipFileMetadata = $flow.state.zipFileMetadata;\nif (!Array.isArray(zipFileMetadata)) {\n  zipFileMetadata = $vars.zipFileMetadata || [];\n}\n\n// Create evidence summary from metadata\nconst evidenceSummary = Array.isArray(zipFileMetadata) \n  ? zipFileMetadata.map(item => ({\n      filename: item.filename || 'unknown',\n      type: item.type || 'unknown',\n      contents: item.type || 'unknown',\n      metadata: item\n    }))\n  : [];\n\n// Return data for client-side Word generation\nreturn { \n  evidenceSummary: evidenceSummary,\n  analysisResults: analyses \n};",
           "customFunctionUpdateState": [
             {
-              "key": "wordDocumentReport",
-              "value": "<p><span class=\"variable\" data-type=\"mention\" data-id=\"$flow.state.wordDocumentReport\" data-label=\"$flow.state.wordDocumentReport\">{{ $flow.state.wordDocumentReport }}</span> </p>"
+              "key": "wordDocumentBase64",
+              "value": "<p><span class=\"variable\" data-type=\"mention\" data-id=\"$flow.state.wordDocumentBase64\" data-label=\"$flow.state.wordDocumentBase64\">{{ $flow.state.wordDocumentBase64 }}</span> </p>"
             }
           ]
         },
@@ -1590,8 +1607,8 @@
       "height": 66,
       "selected": false,
       "positionAbsolute": {
-        "x": 1672.704648757399,
-        "y": 101.06872652270715
+        "x": 1673.931708544003,
+        "y": 99.84166673610326
       },
       "dragging": false
     },
@@ -1675,7 +1692,7 @@
         "inputAnchors": [],
         "inputs": {
           "customFunctionInputVariables": "",
-          "customFunctionJavascriptFunction": "// This function passes vars to flow state so iteration can access them\nconst metadata = $vars.zipFileMetadata || [];\nreturn JSON.stringify(metadata);",
+          "customFunctionJavascriptFunction": "// This function passes vars to flow state so iteration can access them\nconst metadata = $vars.zipFileMetadata || [];\nreturn metadata;",
           "customFunctionUpdateState": [
             {
               "key": "zipFileMetadata",

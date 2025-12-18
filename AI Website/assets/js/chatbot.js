@@ -143,7 +143,7 @@ async function query(data) {
     console.log('📤 [QUERY] Full Payload:', JSON.stringify(payload, null, 2));
     
     const response = await fetch(
-      "https://cloud.flowiseai.com/api/v1/prediction/c65f4969-942b-4eeb-9cca-a23afff47348",
+      "https://cloud.flowiseai.com/api/v1/prediction/b5a214d5-4f92-4f5c-b122-9c5491ea760e",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -282,24 +282,189 @@ function tryParseAnyJson(obj) {
 }
 
 // -----------------------------
-// Word Document Report Generation (Simplified Fallback)
+// Word Document Report Generation (CLIENT-SIDE)
 // -----------------------------
 async function generateWordReport(zipFileNames, zipFileMetadata) {
-  try {
-    console.log('� [REPORT] Starting report generation');
-    console.log('📤 [REPORT] ZipFileNames:', zipFileNames);
-    console.log('📤 [REPORT] ZipFileNames type:', typeof zipFileNames, 'Is Array:', Array.isArray(zipFileNames));
-    console.log('📤 [REPORT] ZipFileMetadata:', zipFileMetadata);
-    console.log('📤 [REPORT] ZipFileMetadata type:', typeof zipFileMetadata, 'Is Array:', Array.isArray(zipFileMetadata));
-
-    // For now, bypass Flowise iteration and create a simple report client-side
-    // This avoids the JSON parsing issues with the iteration node
-    return createFallbackReport(zipFileNames, zipFileMetadata);
+  console.log('📄 Generating Word document on client side');
+  
+  // Get evidenceSummary from Flowise (this already works!)
+  const response = await query({ 
+    question: "Analyze these files and provide a summary", 
+    zipFileNames, 
+    zipFileMetadata 
+  });
+  
+  console.log('Flowise response:', response);
+  
+  // Extract evidenceSummary and analysisResults
+  let evidenceSummary = [];
+  let analysisResults = [];
+  
+  if (response?.message?.content) {
+    try {
+      const parsed = JSON.parse(response.message.content);
+      evidenceSummary = parsed.evidenceSummary || [];
+      analysisResults = parsed.analysisResults || [];
+      console.log('📋 Evidence Summary:', evidenceSummary);
+      console.log('📋 Analysis Results:', analysisResults);
+    } catch (e) {
+      console.error('Failed to parse response:', e);
+    }
+  }
+  
+  // If no summary from Flowise, use metadata
+  if (!evidenceSummary || evidenceSummary.length === 0) {
+    evidenceSummary = zipFileMetadata.map(item => ({
+      filename: item.filename,
+      type: item.type,
+      contents: `File type: ${item.type}`
+    }));
+  }
+  
+  // Generate Word document using docx library (CLIENT SIDE!)
+  console.log('📄 Checking docx library...');
+  console.log('All window properties:', Object.keys(window).slice(0, 50));
+  
+  // Wait for docx to load if needed
+  await new Promise(resolve => setTimeout(resolve, 500)); // Wait half a second for script to load
+  
+  // Check all possible global names
+  let docxLib = window.docx || window.docxjs || window.Docx || window.DOCX;
+  
+  if (!docxLib) {
+    console.error('❌ docx library not found!');
+    console.error('All window keys containing "doc":', Object.keys(window).filter(k => k.toLowerCase().includes('doc')));
+    console.error('Trying to load docx from script tag...');
     
+    // Try to load it dynamically if missing
+    if (!document.querySelector('script[src*="docx"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/docx@7.8.2/build/index.js';
+      document.head.appendChild(script);
+      
+      // Wait for it to load
+      await new Promise((resolve, reject) => {
+        script.onload = resolve;
+        script.onerror = reject;
+        setTimeout(() => reject(new Error('Timeout')), 5000);
+      });
+      
+      // Check again after loading
+      docxLib = window.docx || window.docxjs || window.Docx || window.DOCX;
+    }
+    
+    if (!docxLib) {
+      throw new Error('docx library failed to load. Please refresh the page and try again.');
+    }
+  }
+  
+  console.log('✅ docx library found:', typeof docxLib);
+  const { Document, Packer, Paragraph, HeadingLevel, TextRun } = docxLib;
+  
+  // Build document content
+  const docChildren = [
+    new Paragraph({
+      text: 'Evidence Analysis Report',
+      heading: HeadingLevel.HEADING_1
+    }),
+    new Paragraph({ text: '' }),
+    new Paragraph({
+      text: `Generated: ${new Date().toLocaleString()}`,
+      heading: HeadingLevel.HEADING_2
+    }),
+    new Paragraph({ text: '' }),
+    new Paragraph({
+      text: 'Files in Evidence:',
+      heading: HeadingLevel.HEADING_2
+    }),
+    ...evidenceSummary.flatMap(item => [
+      new Paragraph({
+        text: `File: ${item.filename}`,
+        heading: HeadingLevel.HEADING_3
+      }),
+      new Paragraph({
+        text: `Type: ${item.type}`
+      }),
+      new Paragraph({
+        text: `Contents: ${item.contents}`
+      }),
+      new Paragraph({ text: '' })
+    ])
+  ];
+  
+  // Add analysis results if available
+  if (analysisResults && analysisResults.length > 0) {
+    docChildren.push(
+      new Paragraph({
+        text: 'Detailed Analysis:',
+        heading: HeadingLevel.HEADING_2
+      }),
+      new Paragraph({ text: '' })
+    );
+    
+    analysisResults.forEach(result => {
+      docChildren.push(
+        new Paragraph({ text: String(result) }),
+        new Paragraph({ text: '' })
+      );
+    });
+  }
+  
+  const doc = new Document({
+    sections: [{
+      children: docChildren
+    }]
+  });
+  
+  // Generate and download
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Evidence_Report.docx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  console.log('✅ Word document generated and downloaded');
+  return true;
+}
+
+// -----------------------------
+// Download Word Document from Base64
+// -----------------------------
+function downloadWordDocument(base64String, zipFileNames) {
+  try {
+    console.log('📥 [REPORT] Converting base64 to Word document');
+    
+    // Convert base64 to binary
+    const binaryString = atob(base64String);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Create blob
+    const blob = new Blob([bytes], { 
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+    });
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const element = document.createElement('a');
+    element.setAttribute('href', url);
+    element.setAttribute('download', `Forensic_Evidence_Report_${new Date().getTime()}.docx`);
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    URL.revokeObjectURL(url);
+    
+    console.log('✅ [REPORT] Word document downloaded successfully');
+    return true;
   } catch (err) {
-    console.error('❌ [REPORT] Error generating report:', err);
-    console.log('📋 [REPORT] Falling back to simple report generation');
-    return createFallbackReport(zipFileNames, zipFileMetadata);
+    console.error('❌ [REPORT] Error downloading Word document:', err);
+    return false;
   }
 }
 
