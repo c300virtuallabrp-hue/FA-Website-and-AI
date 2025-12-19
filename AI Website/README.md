@@ -250,6 +250,46 @@ For issues, suggestions, or contributions:
 
 ## Recent Updates (December 2025)
 
+### Version 1.5 - Advanced Microsoft Office File Analysis (December 19, 2025)
+- ✅ **Comprehensive Microsoft File Support**: Full analysis of all Office formats
+  - **Excel Analysis** (.xlsx, .xls): Sheet names, row/column counts, data extraction, sample data preview
+  - **Word Analysis** (.docx, .doc): Word count, character count, paragraph count, text extraction, keyword analysis
+  - **PowerPoint Analysis** (.pptx, .ppt): Slide count, text extraction from slides, content preview, word counts
+- ✅ **Legacy Format Support**: Complete compatibility with Office 97-2003 formats
+  - .xls (Excel 97-2003) with SheetJS
+  - .doc (Word 97-2003) with Mammoth library
+  - .ppt (PowerPoint 97-2003) with format detection
+- ✅ **Client-Side Content Extraction**:
+  - **Excel**: Real-time sheet parsing, cell data extraction, header detection, dimension analysis
+  - **Word**: Full text extraction, content preview (500 chars), metadata extraction
+  - **PowerPoint**: XML parsing for .pptx, slide-by-slide text extraction, total word counts
+- ✅ **Forensic Pattern Detection**: Automatic identification of sensitive information
+  - 📧 Email addresses with count and preview
+  - 📞 Phone numbers detection
+  - 🌐 URLs and web links
+  - 🌐 IP addresses
+  - 📅 Date references
+  - ⚠️ Credit card number patterns (with alert)
+  - ⚠️ SSN patterns (with alert)
+  - 🔑 Forensic keywords: password, confidential, secret, delete, evidence, hide, cover
+- ✅ **Password Protection Detection**: Identifies encrypted/protected documents
+- ✅ **Dual Analysis System**: 
+  - AI-powered analysis via Flowise follow-up queries
+  - Client-side binary parsing with SheetJS, Mammoth, and JSZip
+  - Combined results in comprehensive reports
+- ✅ **External Library Integration**:
+  - SheetJS (xlsx) v0.20.0 for Excel parsing
+  - Mammoth v1.6.0 for Word document text extraction
+  - JSZip for PowerPoint .pptx XML parsing
+- ✅ **Enhanced Report Generation**: Analysis results now include:
+  - File format identification (Modern vs Legacy)
+  - Detailed content structure (sheets, slides, paragraphs)
+  - Data dimensions and statistics
+  - Suspicious pattern alerts
+  - Content previews with forensic relevance
+- ✅ **Smart Loading**: Libraries loaded on-demand only when needed
+- ✅ **Error Resilience**: Graceful handling of corrupted or encrypted files
+
 ### Version 1.4 - Client-Side Word Document Generation (December 18, 2025)
 - ✅ **Word Document Generation**: Full client-side .docx report generation using docx library v7.8.2
 - ✅ **Browser-Based Reports**: Word documents created directly in browser without server dependencies
@@ -370,23 +410,56 @@ payload = {
 }
 ```
 
-### Word Document Generation
+### Microsoft File Analysis Process
 
-**Client-Side Process:**
-1. Frontend calls Flowise API with "generate report" intent
-2. Flowise returns `evidenceSummary` and `analysisResults` in JSON
-3. Browser loads docx library (v7.8.2) from CDN if not already loaded
-4. JavaScript creates Document with sections:
-   - Title: "Evidence Analysis Report" (Heading 1)
-   - Generation timestamp (Heading 2)
-   - "Files in Evidence" section with bullet points (Heading 2, 3)
-   - "Detailed Analysis" section with LLM results (Heading 2)
-5. `Packer.toBlob()` generates binary .docx file
-6. Browser triggers automatic download as `Evidence_Report.docx`
+**Client-Side Analysis Pipeline:**
+1. User uploads ZIP file containing evidence
+2. ZIP extraction via JSZip library
+3. File type detection based on extensions
+4. **For Excel Files (.xlsx, .xls)**:
+   - SheetJS library parses workbook structure
+   - Extracts sheet names, dimensions (rows × columns)
+   - Samples header row and first data row
+   - Counts total data entries
+   - Detects format (Modern/Legacy)
+5. **For Word Files (.docx, .doc)**:
+   - Mammoth library extracts raw text
+   - Calculates word count, character count, paragraphs
+   - Extracts first 500 characters for preview
+   - Performs keyword frequency analysis
+   - Scans for suspicious patterns (emails, phones, URLs, IPs, PII)
+   - Identifies forensic keywords (password, confidential, secret, etc.)
+6. **For PowerPoint Files (.pptx, .ppt)**:
+   - JSZip opens .pptx as ZIP archive
+   - Parses XML from slide files
+   - Extracts text from each slide using regex
+   - Provides slide-by-slide content preview
+   - Calculates total word count across presentation
+7. **AI Follow-Up Analysis**:
+   - System makes additional Flowise queries per Microsoft file
+   - AI provides forensic interpretation and significance
+   - Results combined with client-side parsing
+8. **Report Generation**:
+   - Combines AI analysis + client-side results
+   - Formats with proper headings and structure
+   - Includes suspicious pattern alerts
+   - Downloads as professional Word document
 
 **Libraries Used:**
-- `docx` v7.8.2 from unpkg.com CDN
-- Browser APIs: `Blob`, `URL.createObjectURL`, `document.createElement`
+- `docx` v7.8.2 - Word document generation
+- `SheetJS (xlsx)` v0.20.0 - Excel parsing
+- `Mammoth` v1.6.0 - Word text extraction
+- `JSZip` v3.10.1 - ZIP and PowerPoint XML parsing
+- Browser APIs: `Blob`, `URL.createObjectURL`, `FileReader`, `ArrayBuffer`
+
+**Forensic Pattern Detection:**
+- Email addresses: `/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g`
+- Phone numbers: `/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g`
+- URLs: `/https?:\/\/[^\s]+/g`
+- IP addresses: `/\b(?:\d{1,3}\.){3}\d{1,3}\b/g`
+- Dates: `/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b/g`
+- Credit cards: `/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g`
+- SSN: `/\b\d{3}-\d{2}-\d{4}\b/g`
 
 ### Metadata Object Schema
 Each file in `zipFileMetadata` contains:
@@ -425,7 +498,8 @@ This is an educational platform. For actual forensic investigations:
 
 ---
 
-**Version**: 1.4  
-**Last Updated**: 18th December 2025  
+**Version**: 1.5  
+**Last Updated**: 19th December 2025  
 **Created for**: Digital Forensics Education (Diploma Level)  
-**Key Technologies**: JSZip, Flowise Cloud, Groq LLM (llama-3.1-8b-instant), Google Gemini 2.5 Pro, docx (client-side v7.8.2)
+**Key Technologies**: JSZip v3.10.1, Flowise Cloud, Groq LLM (llama-3.1-8b-instant), Google Gemini 2.5 Pro, docx v7.8.2, SheetJS (xlsx) v0.20.0, Mammoth v1.6.0  
+**Analysis Capabilities**: Excel (.xlsx, .xls), Word (.docx, .doc), PowerPoint (.pptx, .ppt), Password Protection Detection, Forensic Pattern Recognition

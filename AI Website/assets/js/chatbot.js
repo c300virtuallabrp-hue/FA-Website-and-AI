@@ -143,7 +143,7 @@ async function query(data) {
     console.log('📤 [QUERY] Full Payload:', JSON.stringify(payload, null, 2));
     
     const response = await fetch(
-      "https://cloud.flowiseai.com/api/v1/prediction/b5a214d5-4f92-4f5c-b122-9c5491ea760e",
+      "https://cloud.flowiseai.com/api/v1/prediction/f3cf608d-4877-4933-a08f-5075ca8017ca",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -282,6 +282,297 @@ function tryParseAnyJson(obj) {
 }
 
 // -----------------------------
+// Client-Side File Analysis
+// -----------------------------
+async function analyzeFileContent(file, metadata) {
+  const results = [];
+  
+  try {
+    // Load libraries if needed
+    await ensureLibrariesLoaded();
+    
+    // Excel file analysis (.xlsx and .xls)
+    if (metadata.type === 'Microsoft Excel') {
+      console.log('📊 Analyzing Excel file:', metadata.filename);
+      const ext = metadata.filename.toLowerCase().split('.').pop();
+      const workbook = XLSX.read(file, { type: 'array' });
+      
+      results.push(`📊 Excel Analysis: ${metadata.filename}`);
+      if (ext === 'xls') {
+        results.push(`  - Format: Legacy Excel 97-2003 (.xls)`);
+      } else {
+        results.push(`  - Format: Modern Excel (.xlsx)`);
+      }
+      results.push(`  - Total Sheets: ${workbook.SheetNames.length}`);
+      results.push(`  - Sheet Names: ${workbook.SheetNames.join(', ')}`);
+      
+      // Analyze each sheet
+      workbook.SheetNames.forEach((sheetName, idx) => {
+        const sheet = workbook.Sheets[sheetName];
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+        const rowCount = range.e.r - range.s.r + 1;
+        const colCount = range.e.c - range.s.c + 1;
+        
+        results.push(`\n  Sheet ${idx + 1}: "${sheetName}"`);
+        results.push(`    - Dimensions: ${rowCount} rows × ${colCount} columns`);
+        results.push(`    - Range: ${sheet['!ref'] || 'Empty'}`);
+        
+        // Extract sample data from first few rows
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (jsonData.length > 0) {
+          results.push(`    - Headers: ${JSON.stringify(jsonData[0]).substring(0, 100)}...`);
+          if (jsonData.length > 1) {
+            results.push(`    - Sample Row 2: ${JSON.stringify(jsonData[1]).substring(0, 100)}...`);
+          }
+          results.push(`    - Total Data Rows: ${jsonData.length - 1}`);
+        }
+      });
+    }
+    
+    // Word file analysis (.docx and .doc)
+    else if (metadata.type === 'Microsoft Word') {
+      console.log('📝 Analyzing Word file:', metadata.filename);
+      const ext = metadata.filename.toLowerCase().split('.').pop();
+      
+      if (typeof mammoth !== 'undefined') {
+        try {
+          const result = await mammoth.extractRawText({ arrayBuffer: file });
+          const text = result.value;
+          
+          if (text && text.length > 0) {
+            const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+            const charCount = text.length;
+            const paragraphs = text.split(/\n+/).filter(p => p.trim().length > 0).length;
+            
+            results.push(`📝 Word Analysis: ${metadata.filename}`);
+            if (ext === 'doc') {
+              results.push(`  - Format: Legacy Word 97-2003 (.doc)`);
+            } else {
+              results.push(`  - Format: Modern Word (.docx)`);
+            }
+            results.push(`  - Word Count: ${wordCount}`);
+            results.push(`  - Character Count: ${charCount}`);
+            results.push(`  - Paragraphs: ${paragraphs}`);
+            results.push(`\n  Content Preview (first 500 chars):`);
+            results.push(`  "${text.substring(0, 500).trim()}..."`);
+            
+            // Basic keyword analysis
+            const keywords = extractKeywords(text);
+            if (keywords.length > 0) {
+              results.push(`\n  Top Keywords: ${keywords.slice(0, 10).join(', ')}`);
+            }
+            
+            // Additional analysis for suspicious patterns
+            const suspiciousPatterns = detectSuspiciousPatterns(text);
+            if (suspiciousPatterns.length > 0) {
+              results.push(`\n  ⚠️ Potential Items of Interest:`);
+              suspiciousPatterns.forEach(pattern => {
+                results.push(`    - ${pattern}`);
+              });
+            }
+          } else {
+            results.push(`📝 Word file: ${metadata.filename}`);
+            results.push(`  - Format: ${ext === 'doc' ? 'Legacy Word (.doc)' : 'Modern Word (.docx)'}`);
+            results.push(`  - File Size: ${(metadata.sizeBytes / 1024).toFixed(2)} KB`);
+            results.push(`  - ⚠️ No text content could be extracted`);
+            if (ext === 'doc') {
+              results.push(`  - Note: Legacy .doc files may have limited parsing support`);
+            }
+          }
+        } catch (err) {
+          console.error('Error parsing Word document:', err);
+          results.push(`📝 Word file: ${metadata.filename}`);
+          results.push(`  - Format: ${ext === 'doc' ? 'Legacy Word (.doc)' : 'Modern Word (.docx)'}`);
+          results.push(`  - File Size: ${(metadata.sizeBytes / 1024).toFixed(2)} KB`);
+          results.push(`  - ⚠️ Error extracting content: ${err.message}`);
+        }
+      } else {
+        results.push(`📝 Word file detected: ${metadata.filename} (${metadata.sizeBytes} bytes)`);
+        results.push(`  - Binary content analysis not available`);
+      }
+    }
+    
+    // PowerPoint analysis (.pptx)
+    else if (metadata.type === 'Microsoft PowerPoint') {
+      console.log('📽️ Analyzing PowerPoint file:', metadata.filename);
+      const ext = metadata.filename.toLowerCase().split('.').pop();
+      
+      if (ext === 'pptx') {
+        try {
+          // .pptx is a ZIP file containing XML
+          const pptZip = await JSZip.loadAsync(file);
+          const slides = [];
+          let slideTexts = [];
+          
+          // Extract slide content
+          const slideFiles = Object.keys(pptZip.files).filter(name => 
+            name.match(/ppt\/slides\/slide\d+\.xml$/)
+          );
+          
+          results.push(`📽️ PowerPoint Analysis: ${metadata.filename}`);
+          results.push(`  - Total Slides: ${slideFiles.length}`);
+          results.push(`  - File Size: ${(metadata.sizeBytes / 1024).toFixed(2)} KB`);
+          
+          // Parse each slide's XML
+          for (const slideFile of slideFiles.sort()) {
+            const slideXml = await pptZip.file(slideFile).async('text');
+            const slideNum = slideFile.match(/slide(\d+)\.xml$/)[1];
+            
+            // Extract text from XML (simple regex-based extraction)
+            const textMatches = slideXml.match(/<a:t>([^<]+)<\/a:t>/g) || [];
+            const texts = textMatches.map(m => m.replace(/<\/?a:t>/g, ''));
+            
+            if (texts.length > 0) {
+              slideTexts.push(`\n    Slide ${slideNum}: "${texts.join(' ').substring(0, 150)}..."`);
+              slides.push({ slideNum, textCount: texts.length, text: texts.join(' ') });
+            }
+          }
+          
+          if (slides.length > 0) {
+            results.push(`  - Slides with text content: ${slides.length}`);
+            results.push(`\n  Slide Content Preview:`);
+            results.push(...slideTexts.slice(0, 5)); // Show first 5 slides
+            
+            if (slideTexts.length > 5) {
+              results.push(`    ... and ${slideTexts.length - 5} more slides`);
+            }
+            
+            // Count total words across all slides
+            const totalWords = slides.reduce((sum, s) => 
+              sum + s.text.split(/\s+/).filter(w => w.length > 0).length, 0
+            );
+            results.push(`\n  - Total Words Across All Slides: ${totalWords}`);
+          } else {
+            results.push(`  - No text content extracted from slides`);
+          }
+          
+        } catch (err) {
+          console.error('Error parsing PPTX:', err);
+          results.push(`📽️ PowerPoint file: ${metadata.filename}`);
+          results.push(`  - File Size: ${(metadata.sizeBytes / 1024).toFixed(2)} KB`);
+          results.push(`  - Error extracting slide content: ${err.message}`);
+        }
+      } else if (ext === 'ppt') {
+        // Legacy .ppt format (binary)
+        results.push(`📽️ PowerPoint Analysis: ${metadata.filename}`);
+        results.push(`  - Format: Legacy Binary PowerPoint (.ppt)`);
+        results.push(`  - File Size: ${(metadata.sizeBytes / 1024).toFixed(2)} KB`);
+        results.push(`  - ⚠️ Legacy .ppt format requires specialized parsing`);
+        results.push(`  - Recommendation: Convert to .pptx for full analysis`);
+      }
+    }
+    
+  } catch (err) {
+    console.error('❌ Error analyzing file:', metadata.filename, err);
+    results.push(`❌ Error analyzing ${metadata.filename}: ${err.message}`);
+  }
+  
+  return results.join('\n');
+}
+
+// Extract keywords from text
+function extractKeywords(text) {
+  const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'is', 'was', 'are', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what', 'which', 'who', 'when', 'where', 'why', 'how']);
+  
+  const words = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
+  const wordFreq = {};
+  
+  words.forEach(word => {
+    if (!stopWords.has(word)) {
+      wordFreq[word] = (wordFreq[word] || 0) + 1;
+    }
+  });
+  
+  return Object.entries(wordFreq)
+    .sort((a, b) => b[1] - a[1])
+    .map(([word]) => word);
+}
+
+// Detect suspicious patterns in text (for forensic analysis)
+function detectSuspiciousPatterns(text) {
+  const patterns = [];
+  
+  // Check for email addresses
+  const emails = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g);
+  if (emails && emails.length > 0) {
+    patterns.push(`Found ${emails.length} email address(es): ${[...new Set(emails)].slice(0, 3).join(', ')}${emails.length > 3 ? '...' : ''}`);
+  }
+  
+  // Check for phone numbers
+  const phones = text.match(/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g);
+  if (phones && phones.length > 0) {
+    patterns.push(`Found ${phones.length} phone number(s)`);
+  }
+  
+  // Check for URLs
+  const urls = text.match(/https?:\/\/[^\s]+/g);
+  if (urls && urls.length > 0) {
+    patterns.push(`Found ${urls.length} URL(s): ${[...new Set(urls)].slice(0, 2).join(', ')}${urls.length > 2 ? '...' : ''}`);
+  }
+  
+  // Check for IP addresses
+  const ips = text.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g);
+  if (ips && ips.length > 0) {
+    patterns.push(`Found ${ips.length} IP address(es): ${[...new Set(ips)].join(', ')}`);
+  }
+  
+  // Check for dates
+  const dates = text.match(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b/g);
+  if (dates && dates.length > 0) {
+    patterns.push(`Found ${dates.length} date reference(s)`);
+  }
+  
+  // Check for credit card patterns (simplified)
+  const ccPatterns = text.match(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g);
+  if (ccPatterns && ccPatterns.length > 0) {
+    patterns.push(`⚠️ ALERT: Possible credit card number patterns detected`);
+  }
+  
+  // Check for SSN patterns
+  const ssnPatterns = text.match(/\b\d{3}-\d{2}-\d{4}\b/g);
+  if (ssnPatterns && ssnPatterns.length > 0) {
+    patterns.push(`⚠️ ALERT: Possible SSN patterns detected`);
+  }
+  
+  // Check for common forensic keywords
+  const forensicKeywords = ['password', 'confidential', 'secret', 'private', 'delete', 'evidence', 'hide', 'cover'];
+  const foundKeywords = forensicKeywords.filter(kw => text.toLowerCase().includes(kw));
+  if (foundKeywords.length > 0) {
+    patterns.push(`Found forensically relevant keywords: ${foundKeywords.join(', ')}`);
+  }
+  
+  return patterns;
+}
+
+// Ensure required libraries are loaded
+async function ensureLibrariesLoaded() {
+  // Load SheetJS (xlsx) for Excel parsing
+  if (typeof XLSX === 'undefined') {
+    console.log('📚 Loading SheetJS library...');
+    await loadScript('https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js');
+    console.log('✅ SheetJS loaded');
+  }
+  
+  // Load mammoth for Word parsing
+  if (typeof mammoth === 'undefined') {
+    console.log('📚 Loading Mammoth library...');
+    await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+    console.log('✅ Mammoth loaded');
+  }
+}
+
+// Helper to load external scripts
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+// -----------------------------
 // Word Document Report Generation (CLIENT-SIDE)
 // -----------------------------
 async function generateWordReport(zipFileNames, zipFileMetadata) {
@@ -320,6 +611,67 @@ async function generateWordReport(zipFileNames, zipFileMetadata) {
       contents: `File type: ${item.type}`
     }));
   }
+  
+  // ===== NEW: Make follow-up queries for detailed analysis =====
+  console.log('🔍 Requesting detailed analysis from AI...');
+  
+  // Query AI for each Microsoft file
+  const microsoftFiles = zipFileMetadata.filter(f => 
+    f.type.includes('Microsoft') || f.type.includes('Excel') || f.type.includes('Word') || f.type.includes('PowerPoint')
+  );
+  
+  for (const file of microsoftFiles) {
+    try {
+      const detailQuery = `Provide a detailed forensic analysis of the file "${file.filename}" which is a ${file.type} file (${(file.sizeBytes / 1024).toFixed(2)} KB). What insights can you provide about its potential contents, purpose, and forensic significance?`;
+      
+      const detailResponse = await query({
+        question: detailQuery,
+        zipFileNames: [file.filename],
+        zipFileMetadata: [file]
+      });
+      
+      if (detailResponse?.message?.content) {
+        analysisResults.push(`\n=== AI Analysis: ${file.filename} ===`);
+        analysisResults.push(detailResponse.message.content);
+      }
+    } catch (err) {
+      console.error('Error getting AI analysis for', file.filename, err);
+    }
+  }
+  
+  // ===== NEW: Perform client-side analysis =====
+  console.log('🔬 Performing client-side file analysis...');
+  
+  // Re-read the ZIP file to get actual file contents
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput.files.length > 0) {
+    const zipFile = fileInput.files[0];
+    
+    try {
+      await ensureLibrariesLoaded();
+      const zip = new JSZip();
+      const content = await zip.loadAsync(zipFile);
+      
+      for (const metadata of zipFileMetadata) {
+        const microsoftTypes = ['Microsoft Excel', 'Microsoft Word', 'Microsoft PowerPoint'];
+        if (microsoftTypes.includes(metadata.type)) {
+          const zipEntry = content.file(metadata.path);
+          if (zipEntry) {
+            const fileBuffer = await zipEntry.async('arraybuffer');
+            const analysis = await analyzeFileContent(fileBuffer, metadata);
+            analysisResults.push(`\n=== Client-Side Analysis: ${metadata.filename} ===`);
+            analysisResults.push(analysis);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error performing client-side analysis:', err);
+      analysisResults.push(`\n⚠️ Client-side analysis partially failed: ${err.message}`);
+    }
+  }
+  
+  console.log('📊 Total analysis results collected:', analysisResults.length);
+  console.log('Analysis Results:', analysisResults);
   
   // Generate Word document using docx library (CLIENT SIDE!)
   console.log('📄 Checking docx library...');
@@ -403,11 +755,68 @@ async function generateWordReport(zipFileNames, zipFileMetadata) {
     );
     
     analysisResults.forEach(result => {
-      docChildren.push(
-        new Paragraph({ text: String(result) }),
-        new Paragraph({ text: '' })
-      );
+      const resultText = String(result);
+      
+      // Handle section headers
+      if (resultText.startsWith('===')) {
+        docChildren.push(
+          new Paragraph({
+            text: resultText.replace(/===/g, '').trim(),
+            heading: HeadingLevel.HEADING_3
+          })
+        );
+      }
+      // Handle bullet points
+      else if (resultText.match(/^\s*[-•*]\s/)) {
+        docChildren.push(
+          new Paragraph({ 
+            text: resultText.trim().replace(/^[-•*]\s*/, ''),
+            bullet: { level: 0 }
+          })
+        );
+      }
+      // Handle regular paragraphs
+      else if (resultText.trim()) {
+        // Split by newlines to preserve formatting
+        const lines = resultText.split('\n');
+        lines.forEach(line => {
+          if (line.trim()) {
+            docChildren.push(
+              new Paragraph({ text: line.trim() })
+            );
+          }
+        });
+      }
+      
+      docChildren.push(new Paragraph({ text: '' }));
     });
+  } else {
+    docChildren.push(
+      new Paragraph({
+        text: 'Detailed Analysis:',
+        heading: HeadingLevel.HEADING_2
+      }),
+      new Paragraph({ text: '' }),
+      new Paragraph({ 
+        text: 'No detailed analysis results were generated. This may occur if:'
+      }),
+      new Paragraph({ 
+        text: '• The AI service is unavailable or has exceeded quota limits',
+        bullet: { level: 0 }
+      }),
+      new Paragraph({ 
+        text: '• The files could not be analyzed automatically',
+        bullet: { level: 0 }
+      }),
+      new Paragraph({ 
+        text: '• No Microsoft Office files were present in the evidence',
+        bullet: { level: 0 }
+      }),
+      new Paragraph({ text: '' }),
+      new Paragraph({ 
+        text: 'Recommendation: Please use the chat interface to ask specific questions about the evidence files.'
+      })
+    );
   }
   
   const doc = new Document({
