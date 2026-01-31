@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Virtual Digital Forensics Lab - AI-Powered Investigation and Evidence Analysis">
+  <meta name="keywords" content="digital forensics, AI chatbot, evidence analysis, investigation tools">
+  <title>Virtual Digital Forensics Lab - AI Investigation Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Document parsing libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Word document generation -->
+  <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+  <script>
+    // Configure PDF.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo">
+            <i class="fas fa-magnifying-glass"></i>
+            <span class="logo-text">Digital Forensics Lab</span>
+          </div>
+          <p class="tagline">AI-Powered Investigation & Evidence Analysis</p>
+        </div>
+        <div class="header-info">
+          <p class="subtitle">Interactive Platform for Digital Forensics Education</p>
+          <p class="description">Analyze evidence, simulate investigations, and enhance your forensic skills with our AI-powered chatbot assistant.</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Chat Interface -->
+    <main class="main-content">
+      <div class="chat-container">
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chat-messages">
+          <div class="welcome-section">
+            <div class="welcome-icon"><i class="fas fa-robot"></i></div>
+            <h2>Welcome to the Forensics Lab</h2>
+            <p>Hello! I'm your AI Investigation Assistant. Upload evidence or ask me forensic questions.</p>
+          </div>
+        </div>
+
+        <!-- Error Display -->
+        <div id="chat-error" class="chat-error"></div>
+
+        <!-- Chat Form -->
+        <form id="chat-form" class="chat-input-area" action="#">
+          <!-- File Upload -->
+          <div class="file-upload-area">
+            <input type="file" id="fileInput" multiple hidden>
+            <label for="fileInput" class="file-upload-btn" title="Upload evidence files">
+              <i class="fas fa-paperclip"></i>
+            </label>
+            <div class="file-list" id="fileList"></div>
+                    <button type="button" id="clearUploadsBtn" class="clear-uploads-btn" title="Clear all uploaded files" style="margin-left:10px;">🗑️ Clear Uploads</button>
+          </div>
+
+          <!-- Include JSZip -->
+          <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+
+          <!-- Text Input -->
+          <div class="input-wrapper">
+            <textarea id="chat-input" placeholder="Ask about the evidence or request analysis..." rows="1" class="message-input"></textarea>
+            <button type="button" class="send-btn" id="sendBtn" title="Send message">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+            <button type="button" class="stop-btn" id="stopBtn" title="Stop generating" style="display: none;">
+              <i class="fas fa-stop-circle"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Information Panel -->
+      <aside class="info-panel">
+        <div class="panel-section">
+          <h3><i class="fas fa-lightbulb"></i> Tips</h3>
+          <ul>
+            <li>Upload evidence files (Documents, Packet Captures, PNG photos)</li>
+            <li>To analyze .mem files and password-protected evidence, click the Digital Forensics Lab Extension button below to launch the specialized Website for further investigation.</li>
+            <li>Need clarity? Ask the chatbot to break down the report.</li>
+          </ul>
+        </div>
+        <div class="panel-section">
+          <h3><i class="fas fa-tools"></i> Supported Files</h3>
+          <ul>
+            <li>Documents: .pdf, .docx, .xlsx, .pptx, .pdf, .txt</li>
+            <li>Packet Capture files: .pcapng</li>
+            <li>Steganography Analysis: .png</li>
+          </ul>
+        </div>
+        <div class="panel-section">
+          <h3><i class="fas fa-tools"></i>Other Supported Files</h3>
+          <ul>
+            <li>Memory Dumps: .mem</li>
+            <li>Any Password Protected files</li>
+            <li class="nav-links">
+                <a href="http://localhost:3001">Digital Forensics Lab Extension</a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2025 Virtual Digital Forensics Lab.</p>
+      <p class="footer-note">C300 Project by Dhipin, Javier and Jiaju</p>
+    </footer>
+  </div>
+
+  <!-- Chatbot Script -->
+  <script src="chatbot.js"></script>
+</body>
+</html>
