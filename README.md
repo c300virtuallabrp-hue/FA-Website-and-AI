@@ -57,7 +57,7 @@ Refer to this README for full setup instructions, environment configuration, Flo
 
 7. **Convert Mans file, raw file, split image into .csv files**
    - Use Redline, MFT, autopsy
-   - Follow the technical guide provided
+   - Follow the technical guide provided in the word Document
 
 ---
 
