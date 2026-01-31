@@ -525,7 +525,7 @@ const PowerShellExecutor = {
 const PythonExecutor = {
     executeScript(scriptPath, args = []) {
         const tempOutputFile = path.join(__dirname, `temp_pcap_output_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.json`);
-        const command = `python.exe "${scriptPath}" ${args.join(' ')} > "${tempOutputFile}" 2>&1`;
+        const command = `py "${scriptPath}" ${args.join(' ')} > "${tempOutputFile}" 2>&1`;
         const execResult = PowerShellExecutor.executeCommand(command);
         
         if (execResult.success) {
