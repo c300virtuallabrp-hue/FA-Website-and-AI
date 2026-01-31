@@ -192,6 +192,8 @@ To start the Virtual Lab servers, execute the `startup.bat` file.
   - "Server is running at http://localhost:3001"
 - This may take several minutes
 
+Once the server is up and running in the CMD, click on either http://localhost:3000 or http://localhost:3001. You are now ready to use the Forensic guide. 
+
 ---
 
 ## 📜 License
