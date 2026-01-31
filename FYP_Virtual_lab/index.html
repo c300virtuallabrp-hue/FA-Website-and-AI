@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Forensics Lab Extension</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content"> 
+                <div class="logo-section"> 
+                    <div class="logo"> 
+                        <span class="logo-text">Digital Forensics Lab Extension</span> 
+                    </div> 
+                    <div class="tagline">Cybersecurity-Ready • Forensics-Focused</div> 
+                </div> 
+                <div class="nav-links"> 
+                    <a href="http://localhost:3000">← Digital Forensics Lab</a> 
+                </div> 
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="file-section">
+                <h3>📁 Files</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" multiple>
+                </div>
+                <div id="progressContainer" style="display: none; margin-bottom: 15px;">
+                    <div style="font-size: 12px; margin-bottom: 5px; color: #666;">
+                        <span id="progressText">Uploading...</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                        <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; color: #ddd; margin-bottom: 10px;">Uploaded Files</h4>
+                    <div class="file-list" id="fileList">
+                        <p style="color: #999; font-size: 12px;">No files uploaded yet</p>
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; color: #ddd; margin-bottom: 10px;">🔒 Protected Files</h4>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="protectedFileInput" multiple style="padding: 10px; border: 2px dashed #ff9800; border-radius: 5px; cursor: pointer; display: block; width: 100%; margin-bottom: 10px;">
+                    </div>
+                    <div class="file-list" id="protectedFileList">
+                        <p style="color: #999; font-size: 12px;">No protected files added yet</p>
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+
+                <div>
+                    <h4 style="font-size: 14px; color: #ddd; margin-bottom: 10px;">🔓 Generated Hashes</h4>
+                    <div class="file-list" id="hashList">
+                        <p style="color: #999; font-size: 12px;">No hash files generated yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chatbot-section">
+                <h3>📊 Analysis</h3>
+                <button id="analyzeBtn" class="analyze-button">Analyze Uploaded Files</button>
+                <button id="saveReportBtn" class="save-report-button" disabled>💾 Save Report to Word</button>
+                <div class="output-area" id="outputArea">
+                    <p style="color: #999; text-align: center; margin-top: 50px;">Analysis output will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+</body>
+</html>

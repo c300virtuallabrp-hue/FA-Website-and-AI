@@ -1,0 +1,69 @@
+0:00:00:00 Starting a new session
+0:00:00:00 Loaded a total of 1 password hash
+0:00:00:00 Cost 1 (MS Office version) is 2013 for all loaded hashes
+0:00:00:00 Cost 2 (iteration count) is 100000 for all loaded hashes
+0:00:00:00 Command line: /run/john --wordlist=C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\hashes\Final_Answers_2025.hash 
+0:00:00:00 - UTF-8 input encoding enabled
+0:00:00:00 - Passwords will be stored UTF-8 encoded in .pot file
+0:00:00:00 - Hash type: Office, 2007/2010/2013 (min-len 0, max-len 41 [worst case UTF-8] to 125 [ASCII])
+0:00:00:00 - Algorithm: SHA1 256/256 AVX2 8x / SHA512 256/256 AVX2 4x AES
+0:00:00:00 - Will reject candidates longer than 125 bytes
+0:00:00:00 - Candidate passwords will be buffered and tried in chunks of 128
+0:00:00:00 Proceeding with wordlist mode
+0:00:00:00 - Wordlist file: C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt
+0:00:00:00 - memory mapping wordlist (139921499 bytes)
+0:00:00:00 - No word mangling rules
+0:00:00:00 - No stacked rules
+0:00:06:49 Session aborted
+0:00:00:00 Starting a new session
+0:00:00:00 Loaded a total of 1 password hash
+0:00:00:00 Cost 1 (MS Office version) is 2013 for all loaded hashes
+0:00:00:00 Cost 2 (iteration count) is 100000 for all loaded hashes
+0:00:00:00 Command line: /run/john --wordlist=C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt hash.hash 
+0:00:00:00 - UTF-8 input encoding enabled
+0:00:00:00 - Passwords will be stored UTF-8 encoded in .pot file
+0:00:00:00 - Hash type: Office, 2007/2010/2013 (min-len 0, max-len 41 [worst case UTF-8] to 125 [ASCII])
+0:00:00:00 - Algorithm: SHA1 256/256 AVX2 8x / SHA512 256/256 AVX2 4x AES
+0:00:00:00 - Will reject candidates longer than 125 bytes
+0:00:00:00 - Candidate passwords will be buffered and tried in chunks of 128
+0:00:00:00 Proceeding with wordlist mode
+0:00:00:00 - Wordlist file: C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt
+0:00:00:00 - memory mapping wordlist (139921499 bytes)
+0:00:00:00 - No word mangling rules
+0:00:00:00 - No stacked rules
+0:00:00:41 Session aborted
+0:00:00:00 Starting a new session
+0:00:00:00 Loaded a total of 1 password hash
+0:00:00:00 Cost 1 (MS Office version) is 2013 for all loaded hashes
+0:00:00:00 Cost 2 (iteration count) is 100000 for all loaded hashes
+0:00:00:00 Command line: /run/john --wordlist=C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt hash.hash 
+0:00:00:00 - UTF-8 input encoding enabled
+0:00:00:00 - Passwords will be stored UTF-8 encoded in .pot file
+0:00:00:00 - Hash type: Office, 2007/2010/2013 (min-len 0, max-len 41 [worst case UTF-8] to 125 [ASCII])
+0:00:00:00 - Algorithm: SHA1 256/256 AVX2 8x / SHA512 256/256 AVX2 4x AES
+0:00:00:00 - Will reject candidates longer than 125 bytes
+0:00:00:00 - Candidate passwords will be buffered and tried in chunks of 128
+0:00:00:00 Proceeding with wordlist mode
+0:00:00:00 - Wordlist file: C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt
+0:00:00:00 - memory mapping wordlist (139921499 bytes)
+0:00:00:00 - No word mangling rules
+0:00:00:00 - No stacked rules
+0:00:23:03 Session aborted
+0:00:00:00 Starting a new session
+0:00:00:00 Loaded a total of 1 password hash
+0:00:00:00 Cost 1 (MS Office version) is 2013 for all loaded hashes
+0:00:00:00 Cost 2 (iteration count) is 100000 for all loaded hashes
+0:00:00:00 Command line: /run/john --wordlist=C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt hash.hash 
+0:00:00:00 - UTF-8 input encoding enabled
+0:00:00:00 - Passwords will be stored UTF-8 encoded in .pot file
+0:00:00:00 - Hash type: Office, 2007/2010/2013 (min-len 0, max-len 41 [worst case UTF-8] to 125 [ASCII])
+0:00:00:00 - Algorithm: SHA1 256/256 AVX2 8x / SHA512 256/256 AVX2 4x AES
+0:00:00:00 - Will reject candidates longer than 125 bytes
+0:00:00:00 - Candidate passwords will be buffered and tried in chunks of 128
+0:00:00:00 Proceeding with wordlist mode
+0:00:00:00 - Wordlist file: C:\Users\23007717\OneDrive - Republic Polytechnic\Desktop\Y3S2\fyp my attempt\rockyou.txt
+0:00:00:00 - memory mapping wordlist (139921499 bytes)
+0:00:00:00 - No word mangling rules
+0:00:00:00 - No stacked rules
+0:00:00:00 + Cracked Final_Answers_2025.xlsx
+0:00:00:00 Session completed
