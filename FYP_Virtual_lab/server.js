@@ -13,24 +13,28 @@ const PORT = process.env.PORT || 3001;
 
 // Flowise API integration
 async function queryFlowise(question) {
-    try {
-        const response = await fetch(
-            "https://cloud.flowiseai.com/api/v1/prediction/0c885779-c4a8-471f-87b0-4638bf38b3c9",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ question: question })
-            }
-        );
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error('Error querying Flowise:', error);
-        throw error;
+  try {
+    const flowiseUrl = process.env.FLOWISE_API_URL;
+    if (!flowiseUrl) throw new Error("FLOWISE_API_URL is not set in environment variables.");
+
+    const response = await fetch(flowiseUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Flowise error ${response.status}: ${text}`);
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error querying Flowise:", error);
+    throw error;
+  }
 }
+
 
 // File type analyzer utility
 const FileTypeAnalyzer = {
